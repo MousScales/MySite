@@ -1333,7 +1333,8 @@ function checkOrientation() {
     if (!popup) return;
     if (isMobile()) {
         document.body.classList.add('is-mobile');
-        if (window.innerHeight < window.innerWidth) {
+        // Show popup if in portrait (height > width)
+        if (window.innerHeight > window.innerWidth) {
             popup.style.display = 'flex';
         } else {
             popup.style.display = 'none';
