@@ -1172,8 +1172,13 @@ async function showEventMedia(country, event) {
             Bucket: AWS_CONFIG_MAIN.bucketName,
             Prefix: `sections/${s3Folder}/${event}/`
         };
-        const data = await s3Main.listObjectsV2(params).promise();
-        const mediaFiles = (data.Contents || []).filter(item => !item.Key.endsWith('/.folder'));
+        let mediaFiles = [];
+        let ContinuationToken = undefined;
+        do {
+            const data = await s3Main.listObjectsV2({ ...params, ContinuationToken }).promise();
+            mediaFiles = mediaFiles.concat((data.Contents || []).filter(item => !item.Key.endsWith('/.folder')));
+            ContinuationToken = data.IsTruncated ? data.NextContinuationToken : undefined;
+        } while (ContinuationToken);
         if (mediaFiles.length === 0) {
             mediaGrid.innerHTML += '<div style="color:var(--text-secondary);">No media found in this section.</div>';
             return;
@@ -1307,14 +1312,14 @@ function updateCountryInfo(countryName) {
     }
 }
 
-async function updateViewCount() {
+async function updateLiveViewers() {
     try {
-        const res = await fetch('/api/views', { method: 'POST' });
+        const res = await fetch('/api/views');
         const data = await res.json();
-        document.getElementById('view-num').textContent = data.count;
+        document.getElementById('view-num').textContent = data.live;
     } catch (e) {
         document.getElementById('view-num').textContent = 'N/A';
     }
 }
-
-document.addEventListener('DOMContentLoaded', updateViewCount); 
+setInterval(updateLiveViewers, 5000);
+document.addEventListener('DOMContentLoaded', updateLiveViewers); 
