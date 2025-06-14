@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Media Upload</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1001.0.min.js"></script>
+    <script>
+        if (localStorage.getItem('isAdmin') !== 'true') {
+            window.location.href = 'index.html';
+        }
+    </script>
+    <style>
+        .upload-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            border: 2px solid var(--accent-color);
+        }
+
+        .section-controls {
+            margin-bottom: 20px;
+        }
+
+        .section-select, .event-input, .date-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-color);
+            color: var(--text-primary);
+            border-radius: 5px;
+        }
+
+        .event-section {
+            display: none;
+            margin: 20px 0;
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            border: 1px solid var(--accent-color);
+        }
+
+        .event-section.active {
+            display: block;
+        }
+
+        .event-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--accent-color);
+        }
+
+        .create-event-btn {
+            background: var(--accent-color);
+            color: var(--bg-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .event-list {
+            margin-top: 20px;
+        }
+
+        .event-list h3 {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .event-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: var(--bg-secondary);
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .event-item:hover {
+            background: rgba(224, 224, 224, 0.1);
+            transform: translateX(5px);
+        }
+
+        .event-item.selected {
+            border: 2px solid var(--accent-color);
+            background: rgba(224, 224, 224, 0.1);
+        }
+
+        .file-input-container {
+            border: 2px dashed var(--accent-color);
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .file-input-container:hover {
+            background: rgba(224, 224, 224, 0.05);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: var(--accent-color);
+            color: var(--bg-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .upload-list {
+            margin-top: 20px;
+        }
+
+        .upload-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+
+        .upload-item .filename {
+            flex-grow: 1;
+        }
+
+        .upload-item .status {
+            margin-left: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--bg-tertiary);
+            margin-top: 5px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .current-path {
+            font-size: 14px;
+            color: var(--accent-color);
+            margin: 15px 0;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-radius: 5px;
+            border: 1px solid var(--accent-color);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-section">
+            <i class="fas fa-upload"></i>
+            <h1>Media Upload</h1>
+            <div class="passport-stamp">ADMIN PANEL</div>
+        </div>
+
+        <div class="upload-container">
+            <div class="section-controls">
+                <select class="section-select" id="sectionSelect">
+                    <option value="">Select a country...</option>
+                    <option value="uae">UAE</option>
+                    <option value="egypt">Egypt</option>
+                    <option value="senegal">Senegal</option>
+                    <option value="saudi">Saudi</option>
+                    <option value="usa">USA</option>
+                </select>
+
+                <div class="event-section" id="eventSection">
+                    <div class="event-header">
+                        <input type="text" class="event-input" id="eventName" placeholder="Event name (e.g., Dubai with Mozz)">
+                        <input type="month" class="date-input" id="eventDate">
+                        <button class="create-event-btn" id="createEventBtn">Create Event</button>
+                    </div>
+
+                    <div class="event-list" id="eventList">
+                        <!-- Events will be populated here -->
+                    </div>
+                </div>
+
+                <div class="current-path" id="currentPath">
+                    Selected path: none
+                </div>
+            </div>
+
+            <div class="file-input-container" id="dropZone">
+                <i class="fas fa-cloud-upload-alt fa-3x" style="color: var(--accent-color); margin-bottom: 15px;"></i>
+                <p>Drag and drop files here or click to select</p>
+                <input type="file" multiple class="file-input" id="fileInput" accept="image/*,video/*">
+            </div>
+
+            <button class="upload-btn" id="uploadBtn" disabled>Upload Files</button>
+
+            <div class="upload-list" id="uploadList"></div>
+            <div id="uploadConfirmation" style="margin-top:20px; color:var(--accent-color); font-weight:bold;"></div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html> 

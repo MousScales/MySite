@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mous's Life Journal - Capturing Moments</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1001.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="title-section">
+            <i class="fas fa-book-open"></i>
+            <h1>Mous's Life Journal</h1>
+            <div class="passport-stamp">LIFE CHRONICLES</div>
+        </div>
+        <div class="content-wrapper">
+            <div class="map-container">
+                <div id="map"></div>
+                <!-- Removed all static photo-catalog and hardcoded section/event HTML. Only dynamic event-list-panel remains. -->
+            </div>
+            <div class="info-panel">
+                <div id="country-info">
+                    <h2>About Me!</h2>
+                    <div id="country-name" style="display: none;"></div>
+                    <div id="event-list-panel" style="display:none; margin-top: 20px;"></div>
+                    
+                    <!-- Bio Section -->
+                    <div class="bio-section">
+                        <div class="profile-section">
+                            <div class="profile-picture">
+                                <img src="images/pfp/profile.JPG" alt="Moustapha in black hoodie">
+                            </div>
+                            <h3>Moustapha Gueye</h3>
+                            <p class="bio-text">
+                                Hey, I'm Moustapha! Welcome to my life journal — a digital chronicle I created to document my life's journey and the beautiful moments that shape it. From travels across the globe to cherished memories with family and friends, this is where I capture the essence of my experiences. Each entry here represents a chapter in my ongoing story, filled with adventures, learnings, and the people who make it all worthwhile. Join me as I document this beautiful journey called life!
+                            </p>
+                        </div>
+                        
+                        <div class="social-links">
+                            <h3 class="follow-me">Follow Me!</h3>
+                            <a href="https://instagram.com/prollymous" class="social-link">
+                                <i class="fab fa-instagram"></i>
+                                <span>Instagram</span>
+                            </a>
+                            <a href="https://twitter.com/profitablemous" class="social-link">
+                                <i class="fab fa-twitter"></i>
+                                <span>Twitter</span>
+                            </a>
+                        </div>
+                        
+                        <div class="last-updated">
+                            Last updated on January 15, 2024
+                        </div>
+                        
+                        <div class="travel-progress">
+                            <div class="progress-text">Countries Visited: <span id="progress-stats">0/0</span></div>
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                        </div>
+
+                        <div class="random-country">
+                            <button id="random-country-btn" type="button" aria-label="Select a random visited country">
+                                <i class="fas fa-dice" aria-hidden="true"></i>
+                                Random Adventure
+                            </button>
+                        </div>
+                        <button id="admin-btn" type="button" class="inconspicuous-admin-btn" style="display:block;">Admin</button>
+                    </div>
+
+                    <!-- Date Sections -->
+                    
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Popup -->
+        <div class="image-popup">
+            <div class="popup-overlay"></div>
+            <div class="popup-content">
+                <img src="" alt="">
+                <video src="" controls style="display: none;"></video>
+                <button class="close-popup">&times;</button>
+                <button class="popup-nav-btn prev">&lt;</button>
+                <button class="popup-nav-btn next">&gt;</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+    <script>
+    function setAdminBtnVisibility(show) {
+        var btn = document.getElementById('admin-btn');
+        if (btn) btn.style.display = show ? 'block' : 'none';
+    }
+
+    // Patch updateCountryInfo to hide admin button when a country is selected
+    const origUpdateCountryInfo = window.updateCountryInfo;
+    window.updateCountryInfo = function(countryName) {
+        if (typeof origUpdateCountryInfo === 'function') origUpdateCountryInfo.apply(this, arguments);
+        setAdminBtnVisibility(!countryName || !visitedCountries.includes(countryName));
+    };
+
+    document.getElementById('admin-btn').onclick = function() {
+        const code = prompt('Enter admin code:');
+        if (code === '111953') {
+            localStorage.setItem('isAdmin', 'true');
+            window.location.href = 'admin.html';
+        } else if (code !== null) {
+            alert('Incorrect code.');
+        }
+    };
+    // On load, show admin button (bio screen)
+    setAdminBtnVisibility(true);
+    </script>
+    <style>
+    .inconspicuous-admin-btn {
+      display: block;
+      margin: 18px auto 0 auto;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(224,224,224,0.12);
+      color: #888;
+      font-size: 0;
+      border: none;
+      opacity: 0.2;
+      z-index: 10;
+      transition: none;
+      box-shadow: none;
+      cursor: pointer;
+    }
+    .inconspicuous-admin-btn::after {
+      content: '\f084'; /* fa-key icon */
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      font-size: 18px;
+      color: #888;
+      display: block;
+      text-align: center;
+      line-height: 38px;
+    }
+    .inconspicuous-admin-btn:hover,
+    .inconspicuous-admin-btn:focus {
+      opacity: 0.2;
+      background: rgba(224,224,224,0.12);
+      color: #888;
+    }
+    .info-panel { position: relative; }
+    </style>
+</body>
+</html> 
