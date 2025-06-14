@@ -1085,4 +1085,31 @@ h1 {
 
 .view-count-header .view-icon {
     font-size: 20px;
+}
+
+@media (max-width: 700px), (max-width: 900px) and (orientation: portrait) {
+    body.is-mobile .photo-grid,
+    .is-mobile .photo-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        gap: 12px;
+        padding: 8px;
+        height: auto;
+    }
+    body.is-mobile .photo-item,
+    .is-mobile .photo-item {
+        min-height: 220px;
+        max-height: 350px;
+        height: 55vw;
+        border-radius: 12px;
+    }
+    body.is-mobile .photo-item img,
+    .is-mobile .photo-item img,
+    body.is-mobile .photo-item video,
+    .is-mobile .photo-item video {
+        border-radius: 12px;
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+    }
 } 

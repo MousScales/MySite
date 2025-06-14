@@ -1322,4 +1322,27 @@ async function updateLiveViewers() {
     }
 }
 setInterval(updateLiveViewers, 5000);
-document.addEventListener('DOMContentLoaded', updateLiveViewers); 
+document.addEventListener('DOMContentLoaded', updateLiveViewers);
+
+// Portrait mode popup for mobile
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+function checkOrientation() {
+    const popup = document.getElementById('portrait-popup');
+    if (!popup) return;
+    if (isMobile()) {
+        document.body.classList.add('is-mobile');
+        if (window.innerHeight < window.innerWidth) {
+            popup.style.display = 'flex';
+        } else {
+            popup.style.display = 'none';
+        }
+    } else {
+        document.body.classList.remove('is-mobile');
+        popup.style.display = 'none';
+    }
+}
+window.addEventListener('orientationchange', checkOrientation);
+window.addEventListener('resize', checkOrientation);
+document.addEventListener('DOMContentLoaded', checkOrientation); 
