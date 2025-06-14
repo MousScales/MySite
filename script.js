@@ -927,7 +927,7 @@ function initializeArrowButtons(catalog) {
 const AWS_CONFIG = {
     region: 'us-east-2', // Your Ohio region
     bucketName: 'mous-life-journal',
-    allowedFileTypes: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'MOV'],
+    allowedFileTypes: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'MOV', 'webp', 'heic', 'HEIC', 'JPG', 'JPEG', 'PNG', 'GIF', 'MP4', 'MOV', 'WEBP'],
     cognito: {
         identityPoolId: 'us-east-2:749f4e77-a158-4363-ba7d-dd0357652ad2',
         userPoolId: 'us-east-2_uKaIhSvH7'
@@ -1188,7 +1188,7 @@ async function showEventMedia(country, event) {
         mediaFiles.forEach(item => {
             const ext = item.Key.split('.').pop().toLowerCase();
             let el;
-            if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
+            if (["jpg","jpeg","png","gif","webp","heic"].includes(ext.toLowerCase())) {
                 el = document.createElement('img');
                 el.src = `https://${AWS_CONFIG_MAIN.bucketName}.s3.${AWS_CONFIG_MAIN.region}.amazonaws.com/${item.Key}`;
                 el.style = 'width:100%;height:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.12);cursor:pointer;';
@@ -1197,7 +1197,7 @@ async function showEventMedia(country, event) {
                     e.stopPropagation();
                     createPopup(el);
                 });
-            } else if (["mp4","mov","webm"].includes(ext)) {
+            } else if (["mp4","mov","webm"].includes(ext.toLowerCase())) {
                 // Video wrapper for custom controls
                 const wrapper = document.createElement('div');
                 wrapper.style = 'position:relative;width:100%;height:100%;aspect-ratio:1/1;border-radius:10px;background:#000;box-shadow:0 2px 8px rgba(0,0,0,0.12);display:flex;align-items:center;justify-content:center;';
