@@ -1109,7 +1109,7 @@ async function showEventListForCountry(country) {
         }
         console.log('[S3] Events found:', events);
         if (events.length === 0) {
-            eventListPanel.innerHTML = '<div style="color:var(--text-secondary);font-size:18px;text-align:center;margin-top:40px;">No sections yet.<br>Upload some memories!</div>';
+            eventListPanel.innerHTML = '<div style="color:var(--text-secondary);font-size:18px;text-align:center;margin-top:40px;">memories coming soon</div>';
             return;
         }
         eventListPanel.innerHTML = '';
@@ -1305,4 +1305,16 @@ function updateCountryInfo(countryName) {
         if (bioSection) bioSection.style.display = 'block';
         if (eventListPanel) eventListPanel.style.display = 'none';
     }
-} 
+}
+
+async function updateViewCount() {
+    try {
+        const res = await fetch('/api/views', { method: 'POST' });
+        const data = await res.json();
+        document.getElementById('view-num').textContent = data.count;
+    } catch (e) {
+        document.getElementById('view-num').textContent = 'N/A';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', updateViewCount); 
