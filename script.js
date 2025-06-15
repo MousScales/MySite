@@ -927,7 +927,7 @@ function initializeArrowButtons(catalog) {
 const AWS_CONFIG = {
     region: 'us-east-2', // Your Ohio region
     bucketName: 'mous-life-journal',
-    allowedFileTypes: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'MOV', 'webp', 'heic', 'HEIC', 'JPG', 'JPEG', 'PNG', 'GIF', 'MP4', 'MOV', 'WEBP'],
+    allowedFileTypes: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'MOV', 'webp',  'JPG', 'JPEG', 'PNG', 'GIF', 'MP4', 'MOV', 'WEBP'],
     cognito: {
         identityPoolId: 'us-east-2:749f4e77-a158-4363-ba7d-dd0357652ad2',
         userPoolId: 'us-east-2_uKaIhSvH7'
@@ -1271,7 +1271,7 @@ async function showEventMedia(country, event) {
         mediaGrid.appendChild(grid);
         // Add back button
         const backBtn = document.createElement('button');
-        backBtn.textContent = '← Back to Sections';
+       
         backBtn.className = 'event-section-btn';
         backBtn.style = 'margin:32px auto 24px auto;display:block;padding:12px 24px;border-radius:8px;background:var(--bg-tertiary);color:var(--accent-color);border:1px solid var(--accent-color);cursor:pointer;font-size:18px;';
         backBtn.onclick = () => {
