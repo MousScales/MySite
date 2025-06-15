@@ -164,11 +164,25 @@ function selectEvent(event) {
     updateUploadButton();
 }
 
-// Handle file selection
-function handleFiles(files) {
-    selectedFiles = Array.from(files);
-    updateUploadButton();
+// Convert HEIC files to JPG before upload
+async function handleFileInput(files) {
+    selectedFiles = [];
+    for (const file of files) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext === 'heic') {
+            try {
+                const jpgBlob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+                const jpgFile = new File([jpgBlob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
+                selectedFiles.push(jpgFile);
+            } catch (e) {
+                alert('Failed to convert HEIC to JPG: ' + file.name);
+            }
+        } else {
+            selectedFiles.push(file);
+        }
+    }
     displaySelectedFiles();
+    updateUploadButton();
 }
 
 // Update upload button state
@@ -280,13 +294,10 @@ dropZone.addEventListener('dragleave', () => {
 
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
-    dropZone.style.background = 'none';
-    handleFiles(e.dataTransfer.files);
+    handleFileInput(e.dataTransfer.files);
 });
 
-fileInput.addEventListener('change', (e) => {
-    handleFiles(e.target.files);
-});
+fileInput.addEventListener('change', (e) => handleFileInput(e.target.files));
 
 uploadBtn.addEventListener('click', uploadFiles);
 
