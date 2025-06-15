@@ -166,11 +166,21 @@ function selectEvent(event) {
 
 // Convert HEIC files to JPG before upload
 async function handleFileInput(files) {
+    const loadingIndicator = document.getElementById('file-loading-indicator');
+    if (files.length > 50) {
+        if (!confirm('You selected more than 50 files. This may take a while and could freeze your browser. Continue?')) {
+            return;
+        }
+    }
     selectedFiles = [];
-    for (const file of files) {
+    loadingIndicator.style.display = 'block';
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
         const ext = file.name.split('.').pop().toLowerCase();
         if (ext === 'heic') {
             try {
+                // Batch conversion: yield to UI every 5 files
+                if (i % 5 === 0) await new Promise(r => setTimeout(r, 0));
                 const jpgBlob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
                 const jpgFile = new File([jpgBlob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
                 selectedFiles.push(jpgFile);
@@ -181,6 +191,7 @@ async function handleFileInput(files) {
             selectedFiles.push(file);
         }
     }
+    loadingIndicator.style.display = 'none';
     displaySelectedFiles();
     updateUploadButton();
 }
