@@ -354,86 +354,96 @@ function createPopup(content) {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'close-popup';
     closeBtn.innerHTML = '×';
-    
-    // Clone the content (image or video)
-    const clonedContent = content.cloneNode(true);
-    if (clonedContent.tagName === 'VIDEO') {
-        clonedContent.controls = false;
-        clonedContent.currentTime = content.currentTime;
-        
-        // Fix video orientation
-        clonedContent.style.transform = '';
-        
-        // Wait for metadata to load to check orientation
-        clonedContent.addEventListener('loadedmetadata', () => {
-            // Get video dimensions
-            const videoWidth = clonedContent.videoWidth;
-            const videoHeight = clonedContent.videoHeight;
-            
-            // Check if video needs rotation based on dimensions and orientation
-            if (videoWidth < videoHeight) {
-                // Portrait video - check if it needs rotation
-                clonedContent.style.maxHeight = '90vh';
-                clonedContent.style.width = 'auto';
-            } else {
-                // Landscape video
-                clonedContent.style.maxWidth = '90vw';
-                clonedContent.style.height = 'auto';
-            }
-        });
-        
+
+    let originalParent = null;
+    let originalNextSibling = null;
+    let isVideo = content.tagName === 'VIDEO';
+
+    if (isVideo) {
+        // Move the original video node into the popup
+        originalParent = content.parentElement;
+        originalNextSibling = content.nextSibling;
+        content.controls = false;
+        // Remove any play button overlays in the original parent
+        const playBtn = originalParent.querySelector('.video-play-button');
+        if (playBtn) playBtn.remove();
+        popupContent.appendChild(content);
         // Add play button to popup video
         const playButton = document.createElement('button');
         playButton.className = 'video-play-button';
-        
         playButton.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (clonedContent.paused) {
-                clonedContent.play();
+            if (content.paused) {
+                content.play();
             } else {
-                clonedContent.pause();
+                content.pause();
             }
         });
-        
-        clonedContent.addEventListener('play', () => {
+        content.addEventListener('play', () => {
             playButton.style.display = 'none';
         });
-        
-        clonedContent.addEventListener('pause', () => {
+        content.addEventListener('pause', () => {
             playButton.style.display = 'flex';
         });
-        
-        clonedContent.addEventListener('ended', () => {
+        content.addEventListener('ended', () => {
             playButton.style.display = 'flex';
-            clonedContent.currentTime = 0;
+            content.currentTime = 0;
         });
-        
-        popupContent.appendChild(clonedContent);
         popupContent.appendChild(playButton);
-        
         // Start playing if original was playing
         if (!content.paused) {
-            clonedContent.play();
+            content.play();
         }
     } else {
+        // For images, clone as before
+        const clonedContent = content.cloneNode(true);
         popupContent.appendChild(clonedContent);
     }
-    
+
     popup.appendChild(overlay);
     popup.appendChild(popupContent);
     popup.appendChild(closeBtn);
-    
+
     // Close popup when clicking overlay or close button
-    overlay.addEventListener('click', () => {
+    function closePopupAndRestore() {
         popup.classList.remove('active');
-        setTimeout(() => popup.remove(), 300);
-    });
-    
-    closeBtn.addEventListener('click', () => {
-        popup.classList.remove('active');
-        setTimeout(() => popup.remove(), 300);
-    });
-    
+        setTimeout(() => {
+            if (isVideo && originalParent) {
+                // Move the video back to its original parent and restore play button
+                if (originalNextSibling) {
+                    originalParent.insertBefore(content, originalNextSibling);
+                } else {
+                    originalParent.appendChild(content);
+                }
+                // Restore play button overlay
+                const playButton = document.createElement('button');
+                playButton.className = 'video-play-button';
+                playButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (content.paused) {
+                        content.play();
+                    } else {
+                        content.pause();
+                    }
+                });
+                content.addEventListener('play', () => {
+                    playButton.style.display = 'none';
+                });
+                content.addEventListener('pause', () => {
+                    playButton.style.display = 'flex';
+                });
+                content.addEventListener('ended', () => {
+                    playButton.style.display = 'flex';
+                    content.currentTime = 0;
+                });
+                originalParent.appendChild(playButton);
+            }
+            popup.remove();
+        }, 300);
+    }
+    overlay.addEventListener('click', closePopupAndRestore);
+    closeBtn.addEventListener('click', closePopupAndRestore);
+
     document.body.appendChild(popup);
     setTimeout(() => popup.classList.add('active'), 10);
 }
