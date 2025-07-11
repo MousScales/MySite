@@ -45,11 +45,13 @@ const countryNameMappings = {
     'United Arab Emirates': ['United Arab Emirates', 'UAE'],
     'Saudi Arabia': ['Saudi Arabia', 'Kingdom of Saudi Arabia'],
     'Senegal': ['Senegal', 'Republic of Senegal'],
-    'Egypt': ['Egypt', 'Arab Republic of Egypt']
+    'Egypt': ['Egypt', 'Arab Republic of Egypt'],
+    'Morocco': ['Morocco', 'Kingdom of Morocco'],
+    'Spain': ['Spain', 'Kingdom of Spain']
 };
 
 // List of visited countries (primary names)
-const visitedCountries = ['United States', 'United Arab Emirates', 'Saudi Arabia', 'Senegal', 'Egypt'];
+const visitedCountries = ['United States', 'United Arab Emirates', 'Saudi Arabia', 'Senegal', 'Egypt', 'Morocco', 'Spain'];
 
 // Map display country names to S3 folder names
 const countryS3FolderMap = {
@@ -57,7 +59,9 @@ const countryS3FolderMap = {
     'United Arab Emirates': 'uae',
     'Saudi Arabia': 'saudi',
     'Senegal': 'senegal',
-    'Egypt': 'egypt'
+    'Egypt': 'egypt',
+    'Morocco': 'morocco',
+    'Spain': 'spain'
 };
 
 // Function to normalize country names
