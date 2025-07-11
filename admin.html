@@ -193,11 +193,6 @@
             <div class="section-controls">
                 <select class="section-select" id="sectionSelect">
                     <option value="">Select a country...</option>
-                    <option value="uae">UAE</option>
-                    <option value="egypt">Egypt</option>
-                    <option value="senegal">Senegal</option>
-                    <option value="saudi">Saudi</option>
-                    <option value="usa">USA</option>
                 </select>
 
                 <div class="event-section" id="eventSection">
@@ -232,5 +227,35 @@
     </div>
 
     <script src="admin.js"></script>
+    <script>
+        // Dynamically populate country dropdown from visitedCountries
+        const visitedCountries = [
+            'United States',
+            'United Arab Emirates',
+            'Saudi Arabia',
+            'Senegal',
+            'Egypt',
+            'Morocco',
+            'Spain'
+        ];
+        const countryS3FolderMap = {
+            'United States': 'usa',
+            'United Arab Emirates': 'uae',
+            'Saudi Arabia': 'saudi',
+            'Senegal': 'senegal',
+            'Egypt': 'egypt',
+            'Morocco': 'morocco',
+            'Spain': 'spain'
+        };
+        window.addEventListener('DOMContentLoaded', function() {
+            const select = document.getElementById('sectionSelect');
+            visitedCountries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = countryS3FolderMap[country] || country.toLowerCase();
+                option.textContent = country;
+                select.appendChild(option);
+            });
+        });
+    </script>
 </body>
 </html> 
