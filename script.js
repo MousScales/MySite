@@ -358,18 +358,22 @@ function createPopup(content) {
     let originalParent = null;
     let originalNextSibling = null;
     let isVideo = content.tagName === 'VIDEO';
+    let wasPlaying = false;
+    let playButton = null;
+    let fullscreenHandler = null;
 
     if (isVideo) {
         // Move the original video node into the popup
         originalParent = content.parentElement;
         originalNextSibling = content.nextSibling;
+        wasPlaying = !content.paused;
         content.controls = false;
         // Remove any play button overlays in the original parent
         const playBtn = originalParent.querySelector('.video-play-button');
         if (playBtn) playBtn.remove();
         popupContent.appendChild(content);
         // Add play button to popup video
-        const playButton = document.createElement('button');
+        playButton = document.createElement('button');
         playButton.className = 'video-play-button';
         playButton.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -379,20 +383,34 @@ function createPopup(content) {
                 content.pause();
             }
         });
-        content.addEventListener('play', () => {
-            playButton.style.display = 'none';
-        });
-        content.addEventListener('pause', () => {
-            playButton.style.display = 'flex';
-        });
+        function updatePlayButtonVisibility() {
+            // Hide play button if playing and in fullscreen
+            const isFullscreen = document.fullscreenElement === content || document.fullscreenElement === popupContent || document.fullscreenElement === popup;
+            if (!content.paused && isFullscreen) {
+                playButton.style.display = 'none';
+            } else if (content.paused) {
+                playButton.style.display = 'flex';
+            } else {
+                playButton.style.display = 'none';
+            }
+        }
+        content.addEventListener('play', updatePlayButtonVisibility);
+        content.addEventListener('pause', updatePlayButtonVisibility);
         content.addEventListener('ended', () => {
             playButton.style.display = 'flex';
             content.currentTime = 0;
         });
+        // Listen for fullscreen changes
+        fullscreenHandler = () => {
+            updatePlayButtonVisibility();
+        };
+        document.addEventListener('fullscreenchange', fullscreenHandler);
         popupContent.appendChild(playButton);
         // Start playing if original was playing
-        if (!content.paused) {
+        if (wasPlaying) {
             content.play();
+        } else {
+            playButton.style.display = 'flex';
         }
     } else {
         // For images, clone as before
@@ -415,10 +433,14 @@ function createPopup(content) {
                 } else {
                     originalParent.appendChild(content);
                 }
+                // Remove fullscreen handler
+                if (fullscreenHandler) {
+                    document.removeEventListener('fullscreenchange', fullscreenHandler);
+                }
                 // Restore play button overlay
-                const playButton = document.createElement('button');
-                playButton.className = 'video-play-button';
-                playButton.addEventListener('click', (e) => {
+                const playButtonRestore = document.createElement('button');
+                playButtonRestore.className = 'video-play-button';
+                playButtonRestore.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (content.paused) {
                         content.play();
@@ -426,17 +448,26 @@ function createPopup(content) {
                         content.pause();
                     }
                 });
-                content.addEventListener('play', () => {
-                    playButton.style.display = 'none';
-                });
-                content.addEventListener('pause', () => {
-                    playButton.style.display = 'flex';
-                });
+                function updatePlayButtonRestoreVisibility() {
+                    if (content.paused) {
+                        playButtonRestore.style.display = 'flex';
+                    } else {
+                        playButtonRestore.style.display = 'none';
+                    }
+                }
+                content.addEventListener('play', updatePlayButtonRestoreVisibility);
+                content.addEventListener('pause', updatePlayButtonRestoreVisibility);
                 content.addEventListener('ended', () => {
-                    playButton.style.display = 'flex';
+                    playButtonRestore.style.display = 'flex';
                     content.currentTime = 0;
                 });
-                originalParent.appendChild(playButton);
+                // If video was playing, keep playing
+                if (wasPlaying) {
+                    content.play();
+                }
+                // Set initial play button state
+                updatePlayButtonRestoreVisibility();
+                originalParent.appendChild(playButtonRestore);
             }
             popup.remove();
         }, 300);
