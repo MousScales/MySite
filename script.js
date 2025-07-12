@@ -355,63 +355,63 @@ function createPopup(content) {
     closeBtn.className = 'close-popup';
     closeBtn.innerHTML = '×';
 
-    let originalParent = null;
-    let originalNextSibling = null;
     let isVideo = content.tagName === 'VIDEO';
     let wasPlaying = false;
     let playButton = null;
     let fullscreenHandler = null;
+    let originalVideo = null;
+    let popupVideo = null;
 
     if (isVideo) {
-        // Move the original video node into the popup
-        originalParent = content.parentElement;
-        originalNextSibling = content.nextSibling;
-        wasPlaying = !content.paused;
-        content.controls = false;
-        // Remove any play button overlays in the original parent
-        const playBtn = originalParent.querySelector('.video-play-button');
-        if (playBtn) playBtn.remove();
-        popupContent.appendChild(content);
+        originalVideo = content;
+        // Clone the video node for the popup
+        popupVideo = originalVideo.cloneNode(true);
+        popupVideo.controls = false;
+        popupVideo.currentTime = originalVideo.currentTime;
+        wasPlaying = !originalVideo.paused;
+        // Sync volume and muted state
+        popupVideo.volume = originalVideo.volume;
+        popupVideo.muted = originalVideo.muted;
+        // Play state
+        if (wasPlaying) {
+            popupVideo.play();
+        }
         // Add play button to popup video
         playButton = document.createElement('button');
         playButton.className = 'video-play-button';
         playButton.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (content.paused) {
-                content.play();
+            if (popupVideo.paused) {
+                popupVideo.play();
             } else {
-                content.pause();
+                popupVideo.pause();
             }
         });
         function updatePlayButtonVisibility() {
-            // Hide play button if playing and in fullscreen
-            const isFullscreen = document.fullscreenElement === content || document.fullscreenElement === popupContent || document.fullscreenElement === popup;
-            if (!content.paused && isFullscreen) {
+            // Always hide play button if in fullscreen
+            const isFullscreen = document.fullscreenElement === popupVideo || document.fullscreenElement === popupContent || document.fullscreenElement === popup;
+            if (isFullscreen) {
                 playButton.style.display = 'none';
-            } else if (content.paused) {
+            } else if (popupVideo.paused) {
                 playButton.style.display = 'flex';
             } else {
                 playButton.style.display = 'none';
             }
         }
-        content.addEventListener('play', updatePlayButtonVisibility);
-        content.addEventListener('pause', updatePlayButtonVisibility);
-        content.addEventListener('ended', () => {
+        popupVideo.addEventListener('play', updatePlayButtonVisibility);
+        popupVideo.addEventListener('pause', updatePlayButtonVisibility);
+        popupVideo.addEventListener('ended', () => {
             playButton.style.display = 'flex';
-            content.currentTime = 0;
+            popupVideo.currentTime = 0;
         });
-        // Listen for fullscreen changes
         fullscreenHandler = () => {
             updatePlayButtonVisibility();
         };
         document.addEventListener('fullscreenchange', fullscreenHandler);
+        popupContent.appendChild(popupVideo);
         popupContent.appendChild(playButton);
-        // Start playing if original was playing
-        if (wasPlaying) {
-            content.play();
-        } else {
-            playButton.style.display = 'flex';
-        }
+        // Initial state
+        updatePlayButtonVisibility();
     } else {
         // For images, clone as before
         const clonedContent = content.cloneNode(true);
@@ -422,52 +422,37 @@ function createPopup(content) {
     popup.appendChild(popupContent);
     popup.appendChild(closeBtn);
 
-    // Close popup when clicking overlay or close button
     function closePopupAndRestore() {
+        // If video is in fullscreen, exit fullscreen first
+        if (isVideo && (document.fullscreenElement === popupVideo || document.fullscreenElement === popupContent || document.fullscreenElement === popup)) {
+            document.exitFullscreen();
+            // Wait for fullscreenchange event before restoring
+            const onFsExit = () => {
+                document.removeEventListener('fullscreenchange', onFsExit);
+                setTimeout(actuallyClosePopupAndRestore, 50);
+            };
+            document.addEventListener('fullscreenchange', onFsExit);
+        } else {
+            actuallyClosePopupAndRestore();
+        }
+    }
+    function actuallyClosePopupAndRestore() {
         popup.classList.remove('active');
         setTimeout(() => {
-            if (isVideo && originalParent) {
-                // Move the video back to its original parent and restore play button
-                if (originalNextSibling) {
-                    originalParent.insertBefore(content, originalNextSibling);
+            if (isVideo && originalVideo && popupVideo) {
+                // Sync currentTime and play state back to the original video
+                originalVideo.currentTime = popupVideo.currentTime;
+                originalVideo.volume = popupVideo.volume;
+                originalVideo.muted = popupVideo.muted;
+                if (wasPlaying || !popupVideo.paused) {
+                    originalVideo.play();
                 } else {
-                    originalParent.appendChild(content);
+                    originalVideo.pause();
                 }
-                // Remove fullscreen handler
+                // Remove popup fullscreen handler
                 if (fullscreenHandler) {
                     document.removeEventListener('fullscreenchange', fullscreenHandler);
                 }
-                // Restore play button overlay
-                const playButtonRestore = document.createElement('button');
-                playButtonRestore.className = 'video-play-button';
-                playButtonRestore.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (content.paused) {
-                        content.play();
-                    } else {
-                        content.pause();
-                    }
-                });
-                function updatePlayButtonRestoreVisibility() {
-                    if (content.paused) {
-                        playButtonRestore.style.display = 'flex';
-                    } else {
-                        playButtonRestore.style.display = 'none';
-                    }
-                }
-                content.addEventListener('play', updatePlayButtonRestoreVisibility);
-                content.addEventListener('pause', updatePlayButtonRestoreVisibility);
-                content.addEventListener('ended', () => {
-                    playButtonRestore.style.display = 'flex';
-                    content.currentTime = 0;
-                });
-                // If video was playing, keep playing
-                if (wasPlaying) {
-                    content.play();
-                }
-                // Set initial play button state
-                updatePlayButtonRestoreVisibility();
-                originalParent.appendChild(playButtonRestore);
             }
             popup.remove();
         }, 300);
